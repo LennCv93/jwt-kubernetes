@@ -12,30 +12,13 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
-/**
- * Configuración de Spring Security para product-service
- *
- * Paquete: com.tecsup.app.micro.product.infrastructure.config
- * Sesión 1: Autorización por URL
- * Sesión 2: Validación de JWT (product-service NO genera tokens, solo los valida)
- *
- * Endpoints:
- *   GET  /api/products             → público
- *   GET  /api/products/available   → público
- *   GET  /api/products/{id}        → público
- *   GET  /api/products/user/{userId} → autenticado
- *   POST /api/products             → ADMIN
- *   PUT  /api/products/{id}        → ADMIN
- *   DELETE /api/products/{id}      → ADMIN
- *   POST /api/orders               → autenticado (Sesión 3)
- *   GET  /api/products/health      → público
- *   Actuator /actuator/health      → público
- */
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -63,8 +46,8 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
 
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 
-                // Manejo de errores
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpStatus.UNAUTHORIZED.value());
